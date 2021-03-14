@@ -43,18 +43,62 @@ const double timeTolerance { 1e-3 };
 const double timeTolerance { 1e-3 + epicsThreadSleepQuantum() };
 #endif
 
+#ifdef _WIN32
+#include <windows.h>
+
+// undocumented, but widely used, windows function
+static NTSTATUS(__stdcall *QueryTimerResolution)(OUT PULONG MinimumResolution, OUT PULONG MaximumResolution, OUT PULONG ActualResolution) = (NTSTATUS(__stdcall*)(PULONG, PULONG, PULONG))GetProcAddress(GetModuleHandle("ntdll.dll"), "NtQueryTimerResolution");
+
+// find by how many ms the internal clock jumps
+static DWORD findGetTimeResolution()
+{
+  DWORD time_start = timeGetTime();
+  // Wait for timeGetTime to return a different value.
+  while (time_start == timeGetTime())
+    ;
+  return timeGetTime() - time_start;
+}
+
+#define PRINT_TIMING(COMMAND) \
+    epicsTimeGetMonotonic(&ts1); \
+    for(int i=0; i<nsleep; ++i) \
+        COMMAND; \
+    epicsTimeGetMonotonic(&ts2); \
+    testDiag(#COMMAND " took %f ms", epicsTimeDiffInSeconds(&ts2, &ts1) * 1000.0 / nsleep)
+
+static void printTimingDetails()
+{
+    ULONG minRes, maxRes, actualRes;
+    if (QueryTimerResolution(&minRes, &maxRes, &actualRes) == 0)
+    {
+        testDiag( "NtQueryTimerResolution: current: %f ms allowed: %f - %f", actualRes / 10000.0, maxRes / 10000.0, minRes / 10000.0);
+    }
+    testDiag ( "epicsThreadSleepQuantum: %f ms", epicsThreadSleepQuantum() * 1000.0);
+    testDiag ( "findGetTimeResolution: %d ms", findGetTimeResolution());
+    epicsTimeStamp ts1, ts2;
+    HANDLE hEvent = CreateEvent(NULL, 1, 0, NULL); // non signalled event to wait on
+	epicsEventId eEvent = epicsEventCreate(epicsEventEmpty);
+    int nsleep = 20;
+    PRINT_TIMING( Sleep(1) );
+    PRINT_TIMING( WaitForSingleObject(hEvent, 1) );
+    PRINT_TIMING( epicsThreadSleep(0.001) );
+    PRINT_TIMING( epicsEventWaitWithTimeout(eEvent, 0.001) );
+}
+
+#endif
+
 class handler : public epicsTimerNotify
 {
 public:
   handler(epicsTimerQueue& queue, std::function<void()> expireFctIn = [] {}) : timer(queue.createTimer()), expireFct(expireFctIn) {}
   ~handler() { timer.destroy(); }
   void start(double delay) {
-    startTime = epicsTime::getCurrent();
+    startTime = epicsTime::getMonotonic();
     timer.start(*this, delay);
   }
   void cancel() { timer.cancel(); }
   expireStatus expire(const epicsTime& currentTime) {
-    expireTime = epicsTime::getCurrent();
+    expireTime = epicsTime::getMonotonic();
     expireCount++;
     expireFct();
     return expireStatus(noRestart);
@@ -504,7 +548,7 @@ void testExpireDestroy ()
     testOk1 ( expireDestroyVerify::destroyCount == 0 );
 
     testDiag ( "starting %d timers", nTimers );
-    epicsTime cur = epicsTime::getCurrent ();
+    epicsTime cur = epicsTime::getMonotonic ();
     for ( i = 0u; i < nTimers; i++ ) {
         pTimers[i]->start ( cur );
     }
@@ -597,7 +641,7 @@ void testPeriodic ()
     testOk1 ( timerCount == nTimers );
 
     testDiag ( "starting %d timers", nTimers );
-    epicsTime cur = epicsTime::getCurrent ();
+    epicsTime cur = epicsTime::getMonotonic ();
     for ( i = 0u; i < nTimers; i++ ) {
         pTimers[i]->start ( cur );
     }
@@ -618,6 +662,18 @@ void testPeriodic ()
 MAIN(epicsTimerTest)
 {
     testPlan(58);
+#ifdef _WIN32
+//  experiment with different timeBeginPeriod numbers. This will likely only show a difference
+//  on Windows 10 version 2004 and higher as on previous version this affected a global
+//  setting you you would get the lowest requested value of any process so you would often
+//  get 1 or 2ms whatever you asked for.
+//  On 2004 and later without a timeBeginPeriod you will see Sleep and WaitForSingleObject having
+//  a resolution of 15ms, but epicsThreadSleep and epicsEventWaitWithTimeout being much better
+//  as they now use high precision timers
+
+//    timeBeginPeriod(1);
+#endif
+    printTimingDetails();
 #if __cplusplus >= 201103L
     testTimerExpires();
     testMultipleTimersExpireFirstTimerExpiresFirst();
