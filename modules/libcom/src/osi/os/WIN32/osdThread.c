@@ -33,6 +33,11 @@
 
 #include "osdThreadPvt.h"
 
+/* MinGW does not currently define CREATE_WAITABLE_TIMER_HIGH_RESOLUTION */
+#if defined(_MINGW) && (_WIN32_WINNT >= _NT_TARGET_VERSION_WIN10_RS4) && !defined(CREATE_WAITABLE_TIMER_HIGH_RESOLUTION)
+#define CREATE_WAITABLE_TIMER_HIGH_RESOLUTION 0x00000002
+#endif
+
 LIBCOM_API void osdThreadHooksRun(epicsThreadId id);
 
 void setThreadName ( DWORD dwThreadID, LPCSTR szThreadName );
@@ -507,10 +512,12 @@ static win32ThreadParam * epicsThreadParmCreate ( const char *pName )
         pParmWIN32->isSuspended = 0;
         epicsAtomicIncrIntT(&pParmWIN32->refcnt);
 #ifdef CREATE_WAITABLE_TIMER_HIGH_RESOLUTION
-        pParmWIN32->timer = CreateWaitableTimerEx(NULL, NULL, CREATE_WAITABLE_TIMER_HIGH_RESOLUTION, TIMER_ALL_ACCESS);
-#endif
+        pParmWIN32->timer = CreateWaitableTimerEx(NULL, NULL,
+              CREATE_WAITABLE_TIMER_HIGH_RESOLUTION | CREATE_WAITABLE_TIMER_MANUAL_RESET,
+              TIMER_ALL_ACCESS);
+#endif /* CREATE_WAITABLE_TIMER_HIGH_RESOLUTION */
         if (pParmWIN32->timer == NULL) {
-            pParmWIN32->timer = CreateWaitableTimer(NULL, 0, NULL);
+            pParmWIN32->timer = CreateWaitableTimer(NULL, 1, NULL);
         }
         if (pParmWIN32->timer == NULL) {
             free(pParmWIN32);
