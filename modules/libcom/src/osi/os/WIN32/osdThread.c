@@ -34,10 +34,12 @@
 #include "osdThreadPvt.h"
 
 /* MinGW does not currently define CREATE_WAITABLE_TIMER_HIGH_RESOLUTION */
+/*
+actually, mingw doesn't define _WIN32_WINNT or _NT_TARGET_VERSION_WIN10_RS4 so need to think again
 #if defined(_MINGW) && (_WIN32_WINNT >= _NT_TARGET_VERSION_WIN10_RS4) && !defined(CREATE_WAITABLE_TIMER_HIGH_RESOLUTION)
 #define CREATE_WAITABLE_TIMER_HIGH_RESOLUTION 0x00000002
 #endif
-
+*/
 LIBCOM_API void osdThreadHooksRun(epicsThreadId id);
 
 void setThreadName ( DWORD dwThreadID, LPCSTR szThreadName );
