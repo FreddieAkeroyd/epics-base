@@ -672,8 +672,9 @@ MAIN(epicsTimerTest)
 //  as they now use high precision timers
 
 //    timeBeginPeriod(1);
-#endif
+
     printTimingDetails();
+#endif
 #if __cplusplus >= 201103L
     testTimerExpires();
     testMultipleTimersExpireFirstTimerExpiresFirst();
