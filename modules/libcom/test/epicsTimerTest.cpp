@@ -17,8 +17,8 @@
 #if __cplusplus >= 201103L
 #define RUN_EXTRA_TESTS
 #else
-// -Zc:__cplusplus not supported on earlier compilers. _MSC_VER 1800 is VS2013, 1700 is VS2012
-#if defined(_WIN32) && defined(_MSC_VER) && _MSC_VER >= 1700
+// -Zc:__cplusplus not supported on earlier compilers. _MSC_VER 1800 is VS2013
+#if defined(_WIN32) && defined(_MSC_VER) && _MSC_VER >= 1800
 #define RUN_EXTRA_TESTS
 #endif
 #endif
@@ -57,7 +57,8 @@ const double timeTolerance { 1e-3 + epicsThreadSleepQuantum() };
 #include <windows.h>
 
 // undocumented, but widely used, windows function
-static NTSTATUS(__stdcall *QueryTimerResolution)(OUT PULONG MinimumResolution, OUT PULONG MaximumResolution, OUT PULONG ActualResolution) = (NTSTATUS(__stdcall*)(PULONG, PULONG, PULONG))GetProcAddress(GetModuleHandle("ntdll.dll"), "NtQueryTimerResolution");
+static NTSTATUS(__stdcall *QueryTimerResolution)(OUT PULONG MinimumResolution, OUT PULONG MaximumResolution, OUT PULONG ActualResolution) =
+                           (NTSTATUS(__stdcall*)(PULONG, PULONG, PULONG))GetProcAddress(GetModuleHandle("ntdll.dll"), "NtQueryTimerResolution");
 
 // find by how many ms the internal clock jumps
 static DWORD findGetTimeResolution()
