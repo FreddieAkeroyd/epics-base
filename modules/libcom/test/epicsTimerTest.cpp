@@ -14,16 +14,25 @@
  *              505 665 1831
  */
 
+#if __cplusplus >= 201103L
+#define RUN_EXTRA_TESTS
+#else
+// -Zc:__cplusplus not supported on earlier compilers. _MSC_VER 1800 is VS2013, 1700 is VS2012
+#if defined(_WIN32) && defined(_MSC_VER) && _MSC_VER >= 1700
+#define RUN_EXTRA_TESTS
+#endif
+#endif
+
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
-#if __cplusplus >= 201103L
+#ifdef RUN_EXTRA_TESTS
 #include <string>
 #include <vector>
 #include <algorithm>
 #include <functional>
 #include <atomic>
-#endif
+#endif /* RUN_EXTRA_TESTS */
 
 #include "epicsTimer.h"
 #include "epicsEvent.h"
@@ -36,12 +45,13 @@
 #define verify(exp) ((exp) ? (void)0 : \
     epicsAssert(__FILE__, __LINE__, #exp, epicsAssertAuthor))
 
-#if __cplusplus >= 201103L
+#ifdef RUN_EXTRA_TESTS
 #ifdef HAS_HIGH_PREC_TIMERS
 const double timeTolerance { 1e-3 };
 #else
 const double timeTolerance { 1e-3 + epicsThreadSleepQuantum() };
-#endif
+#endif /* HAS_HIGH_PREC_TIMERS */
+#endif /* RUN_EXTRA_TESTS */
 
 #ifdef _WIN32
 #include <windows.h>
@@ -83,9 +93,13 @@ static void printTimingDetails()
     PRINT_TIMING( WaitForSingleObject(hEvent, 1) );
     PRINT_TIMING( epicsThreadSleep(0.001) );
     PRINT_TIMING( epicsEventWaitWithTimeout(eEvent, 0.001) );
+    CloseHandle(hEvent);
+    epicsEventDestroy(eEvent);
 }
 
-#endif
+#endif /* _WIN32 */
+
+#ifdef RUN_EXTRA_TESTS
 
 class handler : public epicsTimerNotify
 {
@@ -675,7 +689,7 @@ MAIN(epicsTimerTest)
 
     printTimingDetails();
 #endif
-#if __cplusplus >= 201103L
+#ifdef RUN_EXTRA_TESTS
     testTimerExpires();
     testMultipleTimersExpireFirstTimerExpiresFirst();
     testMultipleTimersExpireLastTimerExpiresFirst();
