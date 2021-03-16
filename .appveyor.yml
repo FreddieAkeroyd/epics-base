@@ -55,6 +55,7 @@ environment:
   EPICS_TEST_IMPRECISE_TIMING: YES
 
   matrix:
+  - CMP: gcc
   - CMP: vs2019
     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
   - CMP: vs2017
@@ -63,7 +64,6 @@ environment:
   - CMP: vs2013
   - CMP: vs2012
   - CMP: vs2010
-  - CMP: gcc
 
 # Platform: processor architecture
 platform:
@@ -126,8 +126,8 @@ on_failure:
 #  - ps: iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
 
 # block a failed build (until the watchdog barks)
-#on_failure:
-#  - ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
+on_failure:
+  - ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
 
 #---------------------------------#
 #         notifications           #
@@ -137,7 +137,7 @@ notifications:
 
   - provider: Email
     to:
-      - core-talk@aps.anl.gov
+      - freddie.akeroyd@stfc.ac.uk
     on_build_success: false
 
   - provider: GitHubPullRequest
