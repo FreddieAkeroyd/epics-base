@@ -9,8 +9,6 @@
 
 /* Windows supports high-precision timers (in contrast to quantized timers
  * which only support sleeping for a multiple of the quantum). */
-#if defined(_MSC_VER) && !defined(_MINGW)
 #define HAS_HIGH_PREC_TIMERS
-#endif
 
 #endif /* osdTimerh */

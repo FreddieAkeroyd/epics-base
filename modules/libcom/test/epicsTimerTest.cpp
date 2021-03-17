@@ -85,7 +85,7 @@ static void printTimingDetails()
         testDiag( "NtQueryTimerResolution: current: %f ms allowed: %f - %f", actualRes / 10000.0, maxRes / 10000.0, minRes / 10000.0);
     }
     testDiag ( "epicsThreadSleepQuantum: %f ms", epicsThreadSleepQuantum() * 1000.0);
-    testDiag ( "findGetTimeResolution: %d ms", findGetTimeResolution());
+    testDiag ( "findGetTimeResolution: %lu ms", findGetTimeResolution());
     epicsTimeStamp ts1, ts2;
     HANDLE hEvent = CreateEvent(NULL, 1, 0, NULL); // non signalled event to wait on
 	epicsEventId eEvent = epicsEventCreate(epicsEventEmpty);

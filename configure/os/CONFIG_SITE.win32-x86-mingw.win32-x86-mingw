@@ -7,3 +7,8 @@
 # Set the compiler prefix for your MinGW installation
 #CMPLR_PREFIX = i686-w64-mingw32-
 #CMPLR_PREFIX = i586-mingw32msvc-
+
+# define your windows target - if undefined MinGW will
+# currently target Windows XP.  
+# target _WIN32_WINNT_WIN10 and NTDDI_WIN10_RS4 
+OP_SYS_CPPFLAGS += -D_WIN32_WINNT=0x0A00 -DWINVER=0x0A00 -DNTDDI_VERSION=0x0A000005
