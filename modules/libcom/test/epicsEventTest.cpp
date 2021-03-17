@@ -172,7 +172,7 @@ static double eventWaitCheckDelayError( const epicsEventId &id, const double & d
 #define WAITCOUNT 21
 static void eventWaitTest()
 {
-#if defined(_WIN32) || defined(__rtems__) || defined(vxWorks)
+#if defined(__rtems__) || defined(vxWorks)
     testTodoBegin("Known issue with delay calculation");
 #endif
 
