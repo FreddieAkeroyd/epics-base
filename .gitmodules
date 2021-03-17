@@ -20,8 +20,8 @@
     branch = master
 [submodule "modules/pva2pva"]
     path = modules/pva2pva
-    url = https://github.com/epics-base/pva2pva
-    branch = master
+    url = https://github.com/FreddieAkeroyd/pva2pva
+    branch = timers
 [submodule ".ci"]
     path = .ci
     url = https://github.com/epics-base/ci-scripts
