@@ -80,6 +80,9 @@ static DWORD findGetTimeResolution()
 static void printTimingDetails()
 {
     ULONG minRes, maxRes, actualRes;
+#ifdef HAS_HIGH_PREC_TIMERS
+    testDiag ( "HAS_HIGH_PREC_TIMERS defined");
+#endif
     if (QueryTimerResolution(&minRes, &maxRes, &actualRes) == 0)
     {
         testDiag( "NtQueryTimerResolution: current: %f ms allowed: %f - %f", actualRes / 10000.0, maxRes / 10000.0, minRes / 10000.0);

@@ -515,6 +515,8 @@ static win32ThreadParam * epicsThreadParmCreate ( const char *pName )
         pParmWIN32->timer = CreateWaitableTimerEx(NULL, NULL,
               CREATE_WAITABLE_TIMER_HIGH_RESOLUTION | CREATE_WAITABLE_TIMER_MANUAL_RESET,
               TIMER_ALL_ACCESS);
+#else
+#error no high res timers
 #endif /* CREATE_WAITABLE_TIMER_HIGH_RESOLUTION */
         if (pParmWIN32->timer == NULL) {
             pParmWIN32->timer = CreateWaitableTimer(NULL, 1, NULL);
