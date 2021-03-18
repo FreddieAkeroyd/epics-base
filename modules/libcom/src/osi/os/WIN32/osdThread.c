@@ -114,6 +114,7 @@ BOOL WINAPI DllMain (
         if ( dllHandleIndex == TLS_OUT_OF_INDEXES ) {
             success = FALSE;
         }
+        timeBeginPeriod(1);
         break;
 
     case DLL_PROCESS_DETACH:
@@ -203,6 +204,8 @@ static win32ThreadGlobal * fetchWin32ThreadGlobal ( void )
         }
         return pWin32ThreadGlobal;
     }
+
+    timeBeginPeriod(1);
 
     pWin32ThreadGlobal = ( win32ThreadGlobal * )
         calloc ( 1, sizeof ( * pWin32ThreadGlobal ) );
