@@ -169,6 +169,21 @@ static double eventWaitCheckDelayError( const epicsEventId &id, const double & d
     return fabs(error);
 }
 
+static double eventSleepCheckDelayError( const double & delay )
+{
+//    epicsUInt64 beg = epicsMonotonicGet();
+    epicsTime beg = epicsTime::getMonotonic();
+    epicsThreadSleep ( delay );
+    epicsTime end = epicsTime::getMonotonic();
+//    epicsUInt64 end = epicsMonotonicGet();
+//    double meas = (end - beg) / 1000000000.0;
+    double meas = (end - beg);
+    double error = meas - delay;
+    testOk(error >= 0, "epicsThreadSleep(%.6f)  delay error %.6f sec",
+        delay, error);
+    return fabs(error);
+}
+
 #define WAITCOUNT 21
 static void eventWaitTest()
 {
@@ -191,6 +206,23 @@ static void eventWaitTest()
     epicsEventDestroy(event);
 }
 
+static void sleepWaitTest()
+{
+#if defined(__rtems__) || defined(vxWorks)
+    testTodoBegin("Known issue with delay calculation");
+#endif
+
+    double errorSum = eventSleepCheckDelayError(0.0);
+
+    for (int i = 0; i < WAITCOUNT - 1; i++) {
+        double delay = ldexp ( 1.0 , -i );
+        errorSum += eventSleepCheckDelayError ( delay );
+    }
+    double meanError = errorSum / WAITCOUNT;
+    testOk(meanError < 0.05, "Mean delay error was %.6f sec", meanError);
+
+    testTodoEnd();
+}
 
 MAIN(epicsEventTest)
 {
@@ -199,8 +231,10 @@ MAIN(epicsEventTest)
     char **name;
     epicsEventId event;
     int status;
+    
+    epicsThreadPrintStuff();
 
-    testPlan(13 + SLEEPERCOUNT + WAITCOUNT);
+    testPlan(14 + SLEEPERCOUNT + WAITCOUNT + WAITCOUNT);
 
     event = epicsEventMustCreate(epicsEventEmpty);
 
@@ -259,6 +293,8 @@ MAIN(epicsEventTest)
 
     eventWaitTest();
     eventWakeupTest();
+    
+    sleepWaitTest();
 
     free(name);
     free(id);

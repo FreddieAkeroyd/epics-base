@@ -33,10 +33,15 @@
 
 #include "osdThreadPvt.h"
 
-/* MinGW does not currently define CREATE_WAITABLE_TIMER_HIGH_RESOLUTION */ 
-#if defined(_WIN32_WINNT) && (_WIN32_WINNT >= _WIN32_WINNT_WIN10) && (NTDDI_VERSION >= NTDDI_WIN10_RS4) && !defined(CREATE_WAITABLE_TIMER_HIGH_RESOLUTION)
+static NTSTATUS(__stdcall *QueryTimerResolution)(OUT PULONG MinimumResolution, OUT PULONG MaximumResolution, OUT PULONG ActualResolution);
+
+static NTSTATUS(__stdcall *GetWinVersion)(LPOSVERSIONINFOEXW);
+
+#ifndef CREATE_WAITABLE_TIMER_HIGH_RESOLUTION
 #define CREATE_WAITABLE_TIMER_HIGH_RESOLUTION 0x00000002
 #endif
+
+static int hasHighResTimerSupport = 0;
 
 LIBCOM_API void osdThreadHooksRun(epicsThreadId id);
 
@@ -47,6 +52,7 @@ typedef struct win32ThreadGlobal {
     ELLLIST threadList;
     DWORD tlsIndexThreadLibraryEPICS;
 } win32ThreadGlobal;
+
 
 typedef struct epicsThreadOSD {
     ELLNODE node;
@@ -60,6 +66,7 @@ typedef struct epicsThreadOSD {
     char isSuspended;
     int joinable;
     HANDLE timer; /* waitable timer */
+    int high_res_timer; /* is waitable timer high resolution */
 } win32ThreadParam;
 
 typedef struct epicsThreadPrivateOSD {
@@ -114,7 +121,7 @@ BOOL WINAPI DllMain (
         if ( dllHandleIndex == TLS_OUT_OF_INDEXES ) {
             success = FALSE;
         }
-        timeBeginPeriod(1);
+        //timeBeginPeriod(1);
         break;
 
     case DLL_PROCESS_DETACH:
@@ -182,6 +189,7 @@ static win32ThreadGlobal * fetchWin32ThreadGlobal ( void )
     static LONG initCompleted = 0;
     LONG started;
     LONG done;
+    OSVERSIONINFOEXW versionInfo;
 
     done = InterlockedCompareExchange ( & initCompleted, 0, 0 );
     if ( done ) {
@@ -205,7 +213,18 @@ static win32ThreadGlobal * fetchWin32ThreadGlobal ( void )
         return pWin32ThreadGlobal;
     }
 
-    timeBeginPeriod(1);
+    //timeBeginPeriod(1);
+    QueryTimerResolution = (NTSTATUS(__stdcall*)(PULONG, PULONG, PULONG))GetProcAddress(GetModuleHandle("ntdll.dll"), "NtQueryTimerResolution");
+    GetWinVersion = (NTSTATUS(__stdcall*)(LPOSVERSIONINFOEXW))GetProcAddress(GetModuleHandle("ntdll.dll"), "RtlGetVersion");
+
+    /* High resolution timers are available on  Windows 10 version 1803 (RS4) and better, which is windows 10 build 17134
+       however we need to be compiled for vista or above to be able to access createWaitableTimerEx() */
+#if _WIN32_WINNT >= 0x0600
+    versionInfo.dwOSVersionInfoSize = sizeof(versionInfo);
+    if (GetWinVersion != NULL && (*GetWinVersion)(&versionInfo) == 0) {
+        hasHighResTimerSupport = (versionInfo.dwMajorVersion == 10 && versionInfo.dwMinorVersion == 0 && versionInfo.dwBuildNumber >= 17134);
+    }
+#endif
 
     pWin32ThreadGlobal = ( win32ThreadGlobal * )
         calloc ( 1, sizeof ( * pWin32ThreadGlobal ) );
@@ -514,15 +533,17 @@ static win32ThreadParam * epicsThreadParmCreate ( const char *pName )
         strcpy ( pParmWIN32->pName, pName );
         pParmWIN32->isSuspended = 0;
         epicsAtomicIncrIntT(&pParmWIN32->refcnt);
-#ifdef CREATE_WAITABLE_TIMER_HIGH_RESOLUTION
-        pParmWIN32->timer = CreateWaitableTimerEx(NULL, NULL,
+#if _WIN32_WINNT >= 0x0600 /* need Vista or above for CreateWaitableTimerEx */
+        if (hasHighResTimerSupport) {
+            pParmWIN32->timer = CreateWaitableTimerEx(NULL, NULL,
               CREATE_WAITABLE_TIMER_HIGH_RESOLUTION | CREATE_WAITABLE_TIMER_MANUAL_RESET,
               TIMER_ALL_ACCESS);
-#else
-#error no high res timers
-#endif /* CREATE_WAITABLE_TIMER_HIGH_RESOLUTION */
+            pParmWIN32->high_res_timer = 1;
+        }
+#endif
         if (pParmWIN32->timer == NULL) {
             pParmWIN32->timer = CreateWaitableTimer(NULL, 1, NULL);
+            pParmWIN32->high_res_timer = 0;
         }
         if (pParmWIN32->timer == NULL) {
             free(pParmWIN32);
@@ -531,6 +552,8 @@ static win32ThreadParam * epicsThreadParmCreate ( const char *pName )
     }
     return pParmWIN32;
 }
+
+/* High resolution timers are available on  Windows 10 version 1803 (RS4) and better, whihc is windows 10 build 17134 */
 
 static win32ThreadParam * epicsThreadImplicitCreate ( void )
 {
@@ -814,7 +837,7 @@ LIBCOM_API int epicsStdCall epicsThreadIsSuspended ( epicsThreadId id )
  * osdThreadGetTimer ()
  * return stored waitable timer object for thread
  */
-HANDLE osdThreadGetTimer()
+void osdThreadGetTimer(osdThreadTimerInfo* info)
 {
     win32ThreadGlobal * pGbl = fetchWin32ThreadGlobal ();
     win32ThreadParam * pParm;
@@ -824,7 +847,8 @@ HANDLE osdThreadGetTimer()
     pParm = ( win32ThreadParam * )
         TlsGetValue ( pGbl->tlsIndexThreadLibraryEPICS );
 
-    return pParm->timer;
+    info->timer = pParm->timer;
+    info->high_res_timer = pParm->high_res_timer;
 }
 
 /*
@@ -834,28 +858,36 @@ LIBCOM_API void epicsStdCall epicsThreadSleep ( double seconds )
 {
     static const unsigned nSec100PerSec = 10000000u;
     LARGE_INTEGER tmo;
-    HANDLE timer;
+    osdThreadTimerInfo timer_info;
 
     if ( seconds <= 0.0 ) {
-        tmo.QuadPart = 0u;
-    }
-    else {
-        tmo.QuadPart = -((LONGLONG)(seconds * nSec100PerSec + 0.5));
-    }
-
-    if (tmo.QuadPart == 0) {
         Sleep ( 0 );
+        return;
     }
-    else {
-        timer = osdThreadGetTimer();
-        if (!SetWaitableTimer(timer, &tmo, 0, NULL, NULL, 0)) {
-            fprintf ( stderr, "epicsThreadSleep: SetWaitableTimer failed %lu\n", GetLastError() );
-            return;
-        }
-        if (WaitForSingleObject(timer, INFINITE) != WAIT_OBJECT_0) {
-            fprintf ( stderr, "epicsThreadSleep: WaitForSingleObject failed %lu\n", GetLastError() );
-        }
+    /* not sure low res timers are any better than just a sleep */
+    if ( !hasHighResTimerSupport ) {
+        Sleep(seconds * 1000.0 + 0.9999999);
+        return;
     }
+    osdThreadGetTimer(&timer_info);
+    tmo.QuadPart = -((LONGLONG)(seconds * nSec100PerSec + 0.999999));
+    if (!SetWaitableTimer(timer_info.timer, &tmo, 0, NULL, NULL, 0)) {
+        fprintf ( stderr, "epicsThreadSleep: SetWaitableTimer failed %lu\n", GetLastError() );
+        return;
+    }
+    if (WaitForSingleObject(timer_info.timer, INFINITE) != WAIT_OBJECT_0) {
+        fprintf ( stderr, "epicsThreadSleep: WaitForSingleObject failed %lu\n", GetLastError() );
+    }
+}
+
+/* find by how many ms the internal clock jumps */
+static DWORD findGetTimeResolution()
+{
+  DWORD time_start = timeGetTime();
+  // Wait for timeGetTime to return a different value.
+  while (time_start == timeGetTime())
+    ;
+  return timeGetTime() - time_start;
 }
 
 /*
@@ -879,15 +911,29 @@ double epicsStdCall epicsThreadSleepQuantum ()
     DWORD delay;
     BOOL disabled;
     BOOL success;
+    ULONG actualRes, maxRes, minRes;
 
-    success = GetSystemTimeAdjustment (
-        & adjustment, & delay, & disabled );
-    if ( success ) {
+    if ( 0 /*QueryTimerResolution != NULL && (*QueryTimerResolution)(&minRes, &maxRes, &actualRes) == 0*/ )
+    {
+        return actualRes * secPerTick;
+    }
+    else if ( GetSystemTimeAdjustment ( & adjustment, & delay, & disabled ) != 0 ) {
         return delay * secPerTick;
     }
     else {
         return 0.0;
     }
+}
+
+LIBCOM_API void epicsThreadPrintStuff(void)
+{
+    ULONG actualRes, maxRes, minRes;
+    fprintf(stderr, "hasHighResTimerSupport: %d\n", hasHighResTimerSupport);
+    fprintf(stderr, "epicsThreadSleepQuantum: %f ms\n", epicsThreadSleepQuantum() * 1000.0);
+    if ( QueryTimerResolution != NULL && (*QueryTimerResolution)(&minRes, &maxRes, &actualRes) == 0 ) {
+        fprintf(stderr, "QueryTimerResolution: current: %f ms allowed: %f - %f\n", actualRes / 10000.0, maxRes / 10000.0, minRes / 10000.0);
+    }
+    fprintf(stderr, "timeGetTime resolution: %lu ms\n", findGetTimeResolution());
 }
 
 /*

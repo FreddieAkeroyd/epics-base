@@ -5,7 +5,13 @@
 extern "C" {
 #endif
 
-extern HANDLE osdThreadGetTimer(void);
+typedef struct 
+{
+    HANDLE timer;
+    int high_res_timer;    
+} osdThreadTimerInfo;
+
+extern void osdThreadGetTimer(osdThreadTimerInfo* info);
 
 #ifdef __cplusplus
 }

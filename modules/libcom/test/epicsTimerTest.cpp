@@ -56,20 +56,6 @@ const double timeTolerance { 1e-3 + epicsThreadSleepQuantum() };
 #ifdef _WIN32
 #include <windows.h>
 
-// undocumented, but widely used, windows function
-static NTSTATUS(__stdcall *QueryTimerResolution)(OUT PULONG MinimumResolution, OUT PULONG MaximumResolution, OUT PULONG ActualResolution) =
-                           (NTSTATUS(__stdcall*)(PULONG, PULONG, PULONG))GetProcAddress(GetModuleHandle("ntdll.dll"), "NtQueryTimerResolution");
-
-// find by how many ms the internal clock jumps
-static DWORD findGetTimeResolution()
-{
-  DWORD time_start = timeGetTime();
-  // Wait for timeGetTime to return a different value.
-  while (time_start == timeGetTime())
-    ;
-  return timeGetTime() - time_start;
-}
-
 #define PRINT_TIMING(COMMAND) \
     epicsTimeGetMonotonic(&ts1); \
     for(int i=0; i<nsleep; ++i) \
@@ -83,12 +69,7 @@ static void printTimingDetails()
 #ifdef HAS_HIGH_PREC_TIMERS
     testDiag ( "HAS_HIGH_PREC_TIMERS defined");
 #endif
-    if (QueryTimerResolution(&minRes, &maxRes, &actualRes) == 0)
-    {
-        testDiag( "NtQueryTimerResolution: current: %f ms allowed: %f - %f", actualRes / 10000.0, maxRes / 10000.0, minRes / 10000.0);
-    }
-    testDiag ( "epicsThreadSleepQuantum: %f ms", epicsThreadSleepQuantum() * 1000.0);
-    testDiag ( "findGetTimeResolution: %lu ms", findGetTimeResolution());
+    epicsThreadPrintStuff();
     epicsTimeStamp ts1, ts2;
     HANDLE hEvent = CreateEvent(NULL, 1, 0, NULL); // non signalled event to wait on
 	epicsEventId eEvent = epicsEventCreate(epicsEventEmpty);

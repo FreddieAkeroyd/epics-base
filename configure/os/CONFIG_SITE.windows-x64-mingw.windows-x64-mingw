@@ -6,7 +6,6 @@
 # Prefix for mingw compiler from cygwin
 #CMPLR_PREFIX = x86_64-w64-mingw32-
 
-# define your windows target - if undefined MinGW will
-# currently target Windows XP.  
-# target _WIN32_WINNT_WIN10 and NTDDI_WIN10_RS4 
-OP_SYS_CPPFLAGS += -D_WIN32_WINNT=0x0A00 -DNTDDI_VERSION=0x0A000005
+# define your windows target - if undefined MinGW will currently target Windows XP (0x0501)  
+# here target Vista (0x0600) for CreateWaitableTimerEx()
+OP_SYS_CPPFLAGS += -D_WIN32_WINNT=0x0600

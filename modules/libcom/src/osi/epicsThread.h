@@ -338,6 +338,8 @@ LIBCOM_API void epicsStdCall epicsThreadPrivateSet(epicsThreadPrivateId,void *);
 /** Fetch the current value of a thread local variable */
 LIBCOM_API void * epicsStdCall epicsThreadPrivateGet(epicsThreadPrivateId);
 
+LIBCOM_API void epicsThreadPrintStuff(void);
+
 #ifdef __cplusplus
 }
 #endif
