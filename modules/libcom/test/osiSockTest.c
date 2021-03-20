@@ -405,6 +405,28 @@ void udpSockFanoutTest()
     epicsSocketDestroy(dummy);
 }
 
+static
+void selectTest()
+{
+    SOCKET s;
+    epicsTimeStamp ts1, ts2;
+    int i, nsleep = 32;
+    fd_set rfds;
+    struct timeval timeout;
+    s = epicsSocketCreate(AF_INET, SOCK_STREAM, 0);
+    memset(&timeout, 0, sizeof(struct timeval));
+    epicsTimeGetMonotonic(&ts1);
+    for(i=0; i<nsleep; ++i) {
+        FD_ZERO(&rfds);
+        FD_SET(s, &rfds);
+        timeout.tv_sec = 0;
+        timeout.tv_usec = 1000;
+        select(1, &rfds, NULL, NULL, &timeout);
+    }
+    epicsTimeGetMonotonic(&ts2);
+    testDiag("1 ms select wait took %f ms on average", epicsTimeDiffInSeconds(&ts2, &ts1) * 1000.0 / nsleep);  
+}
+
 MAIN(osiSockTest)
 {
     int status;
@@ -418,6 +440,8 @@ MAIN(osiSockTest)
     udpSockFanoutTest();
     tcpSockReuseBindTest(0);
     tcpSockReuseBindTest(1);
+    
+    selectTest();
 
     osiSockRelease();
     return testDone();
