@@ -927,6 +927,7 @@ double epicsStdCall epicsThreadSleepQuantum ()
 
 LIBCOM_API void epicsThreadPrintStuff(void)
 {
+    OSVERSIONINFOEXW versionInfo;
     ULONG actualRes, maxRes, minRes;
     fprintf(stderr, "hasHighResTimerSupport: %d\n", hasHighResTimerSupport);
     fprintf(stderr, "epicsThreadSleepQuantum: %f ms\n", epicsThreadSleepQuantum() * 1000.0);
@@ -934,6 +935,13 @@ LIBCOM_API void epicsThreadPrintStuff(void)
         fprintf(stderr, "QueryTimerResolution: current: %f ms allowed: %f - %f\n", actualRes / 10000.0, maxRes / 10000.0, minRes / 10000.0);
     }
     fprintf(stderr, "timeGetTime resolution: %lu ms\n", findGetTimeResolution());
+    versionInfo.dwOSVersionInfoSize = sizeof(versionInfo);
+    if (GetWinVersion != NULL && (*GetWinVersion)(&versionInfo) == 0) {
+        fprintf(stderr, "Windows %s OS: major %lu minor %lu build %lu service pack %hu.%hu\n",
+              (versionInfo.wProductType != VER_NT_WORKSTATION ? "Server" : "Workstation"),
+               versionInfo.dwMajorVersion, versionInfo.dwMinorVersion, versionInfo.dwBuildNumber,
+               versionInfo.wServicePackMajor, versionInfo.wServicePackMinor);
+    }
 }
 
 /*
