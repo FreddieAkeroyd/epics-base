@@ -231,8 +231,10 @@ MAIN(epicsEventTest)
     char **name;
     epicsEventId event;
     int status;
-    
+
+#ifdef _WIN32
     epicsThreadPrintStuff();
+#endif
 
     testPlan(14 + SLEEPERCOUNT + WAITCOUNT + WAITCOUNT);
 
