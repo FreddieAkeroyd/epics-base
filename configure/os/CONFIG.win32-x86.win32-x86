@@ -140,9 +140,13 @@ STATIC_CXXFLAGS_NO= -MD$(VISC_CFLAGS_DEBUG) $(BUILD_DLL_CFLAGS) -DEPICS_CALL_DLL
 
 STATIC_LDLIBS_YES=ws2_32.lib advapi32.lib user32.lib kernel32.lib winmm.lib dbghelp.lib
 STATIC_LDLIBS_NO=
-STATIC_LDFLAGS=
+# STATIC_LDFLAGS_$(STATIC_BUILD)_$(HOST_OPT)
+STATIC_LDFLAGS_YES_YES=$(patsubst %,-nodefaultlib:%.lib,libcmtd libvcruntimed libucrtd msvcrt msvcrtd vcruntime vcruntimed ucrt ucrtd)
+STATIC_LDFLAGS_YES_NO=$(patsubst %,-nodefaultlib:%.lib,libcmt libvcruntime libucrt msvcrt msvcrtd vcruntime vcruntimed ucrt ucrtd)
+STATIC_LDFLAGS_NO_YES=$(patsubst %,-nodefaultlib:%.lib,msvcrtd vcruntimed ucrtd libcmt libcmtd libvcruntime libvcruntimed libucrt libucrtd)
+STATIC_LDFLAGS_NO_NO=$(patsubst %,-nodefaultlib:%.lib,msvcrt vcruntime ucrt libcmt libcmtd libvcruntime libvcruntimed libucrt libucrtd)
+STATIC_LDFLAGS=$(STATIC_LDFLAGS_$(STATIC_BUILD)_$(HOST_OPT))
 RANLIB=
-
 #
 # option needed for parallel builds with Visual Studio 2013 onward
 # VS2012 and above have VisualStudioVersion, so just need to exclude 2012 (11.0)
@@ -195,7 +199,13 @@ OP_SYS_CFLAGS =
 OP_SYS_CXXFLAGS = $(COMPILER_CXXFLAGS)
 
 # Files and flags needed to link DLLs (used in RULES_BUILD)
-WIN32_DLLFLAGS = -subsystem:windows -dll $(OPT_LDFLAGS) \
+# WIN32_DLLFLAGS_$(STATIC_BUILD)_$(HOST_OPT)
+WIN32_DLLFLAGS_YES_YES=$(patsubst %,-nodefaultlib:%.lib,libcmtd libvcruntimed libucrtd msvcrt msvcrtd vcruntime vcruntimed ucrt ucrtd)
+WIN32_DLLFLAGS_YES_NO=$(patsubst %,-nodefaultlib:%.lib,libcmt libvcruntime libucrt msvcrt msvcrtd vcruntime vcruntimed ucrt ucrtd)
+WIN32_DLLFLAGS_NO_YES=$(patsubst %,-nodefaultlib:%.lib,msvcrtd vcruntimed ucrtd libcmt libcmtd libvcruntime libvcruntimed libucrt libucrtd)
+WIN32_DLLFLAGS_NO_NO=$(patsubst %,-nodefaultlib:%.lib,msvcrt vcruntime ucrt libcmt libcmtd libvcruntime libvcruntimed libucrt libucrtd)
+
+WIN32_DLLFLAGS = -subsystem:windows -dll -WX $(OPT_LDFLAGS) $(WIN32_DLLFLAGS_$(STATIC_BUILD)_$(HOST_OPT)) \
  $(USR_LDFLAGS) $(CMD_LDFLAGS) $(TARGET_LDFLAGS) $(LIB_LDFLAGS)
 
 # Specify dll .def file only if it exists
@@ -285,7 +295,7 @@ SHRLIB_LDLIBS += $(addsuffix .lib, \
 
 #--------------------------------------------------
 # Linker definition
-LINK.cpp = $(WINLINK) -nologo $(STATIC_LDFLAGS) $(LDFLAGS) $(PROD_LDFLAGS) \
+LINK.cpp = $(WINLINK) -nologo -WX $(STATIC_LDFLAGS) $(LDFLAGS) $(PROD_LDFLAGS) \
     -out:$@ $(PROD_LD_OBJS) $(PROD_LD_RESS) $(PROD_LDLIBS)
 
 #--------------------------------------------------
