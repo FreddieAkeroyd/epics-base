@@ -51,7 +51,7 @@ OPT_CFLAGS_YES = $(OPT_CFLAGS_YES_$(OPT_WHOLE_PROGRAM))
 #
 # -Zi generate program database for debugging information
 # -RTCsu enable run-time error checks
-OPT_CFLAGS_NO = -Zi -RTCsu
+OPT_CFLAGS_NO = -Zi -RTCsu -Fd$*.pdb
 
 # specify object file name and location
 OBJ_CFLAG = -Fo
@@ -121,7 +121,7 @@ OPT_CXXFLAGS_YES = $(OPT_CXXFLAGS_YES_$(OPT_WHOLE_PROGRAM))
 #
 # -Zi generate program database for debugging information
 # -RTCsu enable run-time error checks
-OPT_CXXFLAGS_NO = -RTCsu -Zi
+OPT_CXXFLAGS_NO = -RTCsu -Zi -Fd$*.pdb
 
 # specify object file name and location
 OBJ_CXXFLAG = -Fo
