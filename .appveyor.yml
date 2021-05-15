@@ -44,10 +44,10 @@ image: Visual Studio 2015
 
 # Build Configurations: dll/static, regular/debug
 configuration:
-  - dynamic
-  - static
   - dynamic-debug
   - static-debug
+#  - dynamic
+#  - static
 
 # Environment variables: compiler toolchain, base version, setup file, ...
 environment:
@@ -57,16 +57,12 @@ environment:
   EPICS_TEST_IMPRECISE_TIMING: YES
 
   matrix:
-  - CMP: vs2019
-    APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
-  - CMP: vs2017
-    APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
-  - CMP: vs2015
-  - CMP: vs2013
-  - CMP: vs2012
-  - CMP: vs2010
   - CMP: gcc
     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
+  - CMP: gcc
+    APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
+  - CMP: gcc
+    APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
 
 # Platform: processor architecture
 platform:
@@ -88,10 +84,10 @@ matrix:
   - platform: x86
     CMP: vs2015
   # MinGW debug builds use the same libraries, unlike VS
-  - configuration: dynamic-debug
-    CMP: gcc
-  - configuration: static-debug
-    CMP: gcc
+  # - configuration: dynamic-debug
+  #  CMP: gcc
+  #- configuration: static-debug
+  #  CMP: gcc
 
 #---------------------------------#
 #     building & testing          #
@@ -129,8 +125,8 @@ on_failure:
 #  - ps: iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
 
 # block a failed build (until the watchdog barks)
-#on_failure:
-#  - ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
+on_failure:
+  - ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
 
 #---------------------------------#
 #         notifications           #
@@ -140,7 +136,7 @@ notifications:
 
   - provider: Email
     to:
-      - core-talk@aps.anl.gov
+      - freddie.akeroyd@stfc.ac.uk
     on_build_success: false
 
   - provider: GitHubPullRequest
