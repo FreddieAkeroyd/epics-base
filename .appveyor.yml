@@ -44,10 +44,10 @@ image: Visual Studio 2015
 
 # Build Configurations: dll/static, regular/debug
 configuration:
-  - dynamic-debug
-  - static-debug
-#  - dynamic
-#  - static
+  - dynamic
+  - static
+#  - dynamic-debug
+#  - static-debug
 
 # Environment variables: compiler toolchain, base version, setup file, ...
 environment:
