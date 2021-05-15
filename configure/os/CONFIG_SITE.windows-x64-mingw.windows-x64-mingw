@@ -6,5 +6,5 @@
 # Prefix for mingw compiler from cygwin
 #CMPLR_PREFIX = x86_64-w64-mingw32-
 
-HOST_OPT=NO
+#HOST_OPT=NO
 OPT_LDFLAGS = -g
