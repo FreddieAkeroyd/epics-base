@@ -1,0 +1,15 @@
+# CONFIG.windows-x64-mingw.windows-x64-mingw
+#
+# Definitions for windows-x64-mingw target archs
+# Sites may override these definitions in CONFIG_SITE.windows-x64-mingw.windows-x64-mingw
+#-------------------------------------------------------
+
+-include $(CONFIG)/os/CONFIG.Common.windows-x64-mingw
+-include $(CONFIG)/os/CONFIG.windows-x64-mingw.windows-x64-mingw
+-include $(CONFIG)/os/CONFIG_SITE.Common.windows-x64-mingw
+-include $(CONFIG)/os/CONFIG_SITE.windows-x64-mingw.windows-x64-mingw
+
+BUILD_CLASS = HOST
+
+HOST_OPT=NO
+OPT_LDFLAGS = -g
