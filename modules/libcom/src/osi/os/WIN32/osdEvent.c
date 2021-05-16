@@ -97,12 +97,17 @@ LIBCOM_API epicsEventStatus epicsEventWaitWithTimeout (
     DWORD status;
     LARGE_INTEGER tmo;
     HANDLE timer;
+    LONGLONG nSec100;
 
     if ( timeOut <= 0.0 ) {
         tmo.QuadPart = 0u;
     }
     else {
-        tmo.QuadPart = -((LONGLONG)(timeOut * nSec100PerSec + 0.999999));
+        nSec100 = (LONGLONG)(timeOut * nSec100PerSec + 0.999999);
+        if (nSec100 % 10000 != 0) {
+            nSec100 = 10000 * (nSec100 / 10000 + 1); /* round up to next ms */
+        }
+        tmo.QuadPart = -nSec100;
     }
 
     if (tmo.QuadPart < 0) {

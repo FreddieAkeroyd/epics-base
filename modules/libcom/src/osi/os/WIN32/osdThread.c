@@ -821,12 +821,17 @@ LIBCOM_API void epicsStdCall epicsThreadSleep ( double seconds )
     static const unsigned nSec100PerSec = 10000000u;
     LARGE_INTEGER tmo;
     HANDLE timer;
+    LONGLONG nSec100;
 
     if ( seconds <= 0.0 ) {
         tmo.QuadPart = 0u;
     }
     else {
-        tmo.QuadPart = -((LONGLONG)(seconds * nSec100PerSec + 0.999999));
+        nSec100 = (LONGLONG)(seconds * nSec100PerSec + 0.999999);
+        if (nSec100 % 10000 != 0) {
+            nSec100 = 10000 * (nSec100 / 10000 + 1); /* round up to next ms */
+        }
+        tmo.QuadPart = -nSec100;
     }
 
     if (tmo.QuadPart == 0) {
