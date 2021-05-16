@@ -193,6 +193,8 @@ static void eventWaitTest()
 
 static double eventSleepCheckDelayError( const double & delay )
 {
+    epicsThreadSleep ( 0.000001 );
+
     epicsTime beg = epicsTime::getMonotonic();
     epicsThreadSleep ( delay );
     epicsTime end = epicsTime::getMonotonic();

@@ -9,9 +9,9 @@
 #CMPLR_PREFIX = i586-mingw32msvc-
 
 #HOST_OPT=NO
-OPT_LDFLAGS = -g
-OPT_CFLAGS_YES += -g
-OPT_CXXFLAGS_YES += -g
+OPT_LDFLAGS = -ggdb
+OPT_CFLAGS_YES += -ggdb
+OPT_CXXFLAGS_YES += -ggdb
 
 # define your windows target - if undefined MinGW will currently target Windows XP (0x0501)  
 # here target Vista (0x0600) for CreateWaitableTimerEx()
