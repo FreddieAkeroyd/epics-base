@@ -831,6 +831,7 @@ LIBCOM_API void epicsStdCall epicsThreadSleep ( double seconds )
         if (nSec100 % 10000 != 0) {
             nSec100 = 10000 * (nSec100 / 10000 + 1); /* round up to next ms */
         }
+        nSec100 = 10000 * (nSec100 / 10000 + 1); /* round up to next ms */
         tmo.QuadPart = -nSec100;
     }
 
