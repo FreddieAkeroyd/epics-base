@@ -45,9 +45,9 @@ image: Visual Studio 2015
 # Build Configurations: dll/static, regular/debug
 configuration:
   - dynamic
-  - static
-  - dynamic-debug
-  - static-debug
+#  - static
+#  - dynamic-debug
+#  - static-debug
 
 # Environment variables: compiler toolchain, base version, setup file, ...
 environment:
@@ -74,8 +74,8 @@ environment:
 
 # Platform: processor architecture
 platform:
-  - x86
   - x64
+  - x86
 
 # Matrix configuration: exclude sets of jobs
 matrix:
