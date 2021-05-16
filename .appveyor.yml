@@ -46,8 +46,8 @@ image: Visual Studio 2015
 configuration:
   - dynamic
   - static
-#  - dynamic-debug
-#  - static-debug
+  - dynamic-debug
+  - static-debug
 
 # Environment variables: compiler toolchain, base version, setup file, ...
 environment:
@@ -63,6 +63,14 @@ environment:
     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
   - CMP: gcc
     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
+  - CMP: vs2019
+    APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
+  - CMP: vs2017
+    APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
+  - CMP: vs2015
+  - CMP: vs2013
+  - CMP: vs2012
+  - CMP: vs2010
 
 # Platform: processor architecture
 platform:
@@ -84,10 +92,10 @@ matrix:
   - platform: x86
     CMP: vs2015
   # MinGW debug builds use the same libraries, unlike VS
-  # - configuration: dynamic-debug
-  #  CMP: gcc
-  #- configuration: static-debug
-  #  CMP: gcc
+   - configuration: dynamic-debug
+    CMP: gcc
+  - configuration: static-debug
+    CMP: gcc
 
 #---------------------------------#
 #     building & testing          #
@@ -109,8 +117,8 @@ on_finish:
   - ps: Get-ChildItem *.tap -Recurse -Force | % { Push-AppveyorArtifact $_.FullName -FileName $_.Name }
   - cmd: python .ci/cue.py -T 5M test-results
 
-#on_failure:
-#  - cmd: python -m ci_core_dumper report
+on_failure:
+  - cmd: python -m ci_core_dumper report
 
 #---------------------------------#
 #         debugging               #
@@ -125,8 +133,8 @@ on_finish:
 #  - ps: iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
 
 # block a failed build (until the watchdog barks)
-on_failure:
-  - ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
+#on_failure:
+#  - ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
 
 #---------------------------------#
 #         notifications           #

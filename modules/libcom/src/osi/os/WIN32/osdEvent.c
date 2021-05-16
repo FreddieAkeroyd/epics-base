@@ -102,7 +102,7 @@ LIBCOM_API epicsEventStatus epicsEventWaitWithTimeout (
         tmo.QuadPart = 0u;
     }
     else {
-        tmo.QuadPart = -((LONGLONG)(timeOut * nSec100PerSec + 0.5));
+        tmo.QuadPart = -((LONGLONG)(timeOut * nSec100PerSec + 0.999999));
     }
 
     if (tmo.QuadPart < 0) {

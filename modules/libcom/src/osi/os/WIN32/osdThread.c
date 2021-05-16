@@ -826,7 +826,7 @@ LIBCOM_API void epicsStdCall epicsThreadSleep ( double seconds )
         tmo.QuadPart = 0u;
     }
     else {
-        tmo.QuadPart = -((LONGLONG)(seconds * nSec100PerSec + 0.5));
+        tmo.QuadPart = -((LONGLONG)(seconds * nSec100PerSec + 0.999999));
     }
 
     if (tmo.QuadPart == 0) {
