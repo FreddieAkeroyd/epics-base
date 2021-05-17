@@ -175,6 +175,7 @@ static win32ThreadGlobal * fetchWin32ThreadGlobal ( void )
     static LONG initCompleted = 0;
     LONG started;
     LONG done;
+    UINT period;
 
     done = InterlockedCompareExchange ( & initCompleted, 0, 0 );
     if ( done ) {
@@ -198,6 +199,12 @@ static win32ThreadGlobal * fetchWin32ThreadGlobal ( void )
         return pWin32ThreadGlobal;
     }
 
+    for(period = 1; period < 64; period *= 2) {
+        if (timeBeginPeriod(period) == TIMERR_NOERROR) {
+            break;
+        }
+    }
+    
     pWin32ThreadGlobal = ( win32ThreadGlobal * )
         calloc ( 1, sizeof ( * pWin32ThreadGlobal ) );
     if ( ! pWin32ThreadGlobal ) {
