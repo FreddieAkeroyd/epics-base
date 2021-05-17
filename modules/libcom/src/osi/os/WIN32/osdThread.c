@@ -198,13 +198,13 @@ static win32ThreadGlobal * fetchWin32ThreadGlobal ( void )
         }
         return pWin32ThreadGlobal;
     }
-
+#if 0
     for(period = 1; period < 64; period *= 2) {
         if (timeBeginPeriod(period) == TIMERR_NOERROR) {
             break;
         }
     }
-    
+#endif    
     pWin32ThreadGlobal = ( win32ThreadGlobal * )
         calloc ( 1, sizeof ( * pWin32ThreadGlobal ) );
     if ( ! pWin32ThreadGlobal ) {
@@ -511,6 +511,7 @@ static win32ThreadParam * epicsThreadParmCreate ( const char *pName )
         strcpy ( pParmWIN32->pName, pName );
         pParmWIN32->isSuspended = 0;
         epicsAtomicIncrIntT(&pParmWIN32->refcnt);
+#if 0
 #ifdef CREATE_WAITABLE_TIMER_HIGH_RESOLUTION
         pParmWIN32->timer = CreateWaitableTimerEx(NULL, NULL, CREATE_WAITABLE_TIMER_HIGH_RESOLUTION, TIMER_ALL_ACCESS);
 #endif
@@ -521,6 +522,7 @@ static win32ThreadParam * epicsThreadParmCreate ( const char *pName )
             free(pParmWIN32);
             return NULL;
         }
+#endif
     }
     return pParmWIN32;
 }
