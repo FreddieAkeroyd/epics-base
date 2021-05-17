@@ -117,7 +117,8 @@ LIBCOM_API epicsEventStatus epicsEventWaitWithTimeout (
         }
         handles[0] = pSem->handle;
         handles[1] = timer;
-        status = WaitForMultipleObjects (2, handles, FALSE, INFINITE);
+        /*status = WaitForMultipleObjects (2, handles, FALSE, INFINITE);*/
+        status = WaitForSingleObject(pSem->handle, -tmo.QuadPart / 10000);
     }
     else {
         status = WaitForSingleObject(pSem->handle, 0);

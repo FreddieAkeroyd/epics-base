@@ -850,9 +850,10 @@ LIBCOM_API void epicsStdCall epicsThreadSleep ( double seconds )
             fprintf ( stderr, "epicsThreadSleep: SetWaitableTimer failed %lu\n", GetLastError() );
             return;
         }
-        if (WaitForSingleObject(timer, INFINITE) != WAIT_OBJECT_0) {
+        /*if (WaitForSingleObject(timer, INFINITE) != WAIT_OBJECT_0) {
             fprintf ( stderr, "epicsThreadSleep: WaitForSingleObject failed %lu\n", GetLastError() );
-        }
+        }*/
+        Sleep ( -tmo.QuadPart / 10000 );
     }
 }
 
