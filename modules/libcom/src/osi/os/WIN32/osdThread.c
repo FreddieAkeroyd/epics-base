@@ -828,10 +828,9 @@ LIBCOM_API void epicsStdCall epicsThreadSleep ( double seconds )
     }
     else {
         nSec100 = (LONGLONG)(seconds * nSec100PerSec + 0.999999);
-        if (nSec100 % 10000 != 0) {
+        if (1 || nSec100 % 10000 != 0) {
             nSec100 = 10000 * (nSec100 / 10000 + 1); /* round up to next ms */
         }
-        nSec100 = 10000 * (nSec100 / 10000 + 1); /* round up to next ms */
         tmo.QuadPart = -nSec100;
     }
 
