@@ -58,7 +58,7 @@ Com_API = libCom
 # Library to build:
 LIBRARY=Com
 
-Com_SYS_LIBS_WIN32 = ws2_32 advapi32 user32 dbghelp
+Com_SYS_LIBS_WIN32 = ws2_32 advapi32 user32 dbghelp winmm
 
 Com_RCS = Com.rc
 
