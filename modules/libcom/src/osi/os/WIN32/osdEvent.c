@@ -111,6 +111,7 @@ LIBCOM_API epicsEventStatus epicsEventWaitWithTimeout (
     }
 
     if (tmo.QuadPart < 0) {
+#if 0
         timer = osdThreadGetTimer();
         if (!SetWaitableTimer(timer, &tmo, 0, NULL, NULL, 0)) {
             return epicsEventError;
@@ -118,6 +119,7 @@ LIBCOM_API epicsEventStatus epicsEventWaitWithTimeout (
         handles[0] = pSem->handle;
         handles[1] = timer;
         /*status = WaitForMultipleObjects (2, handles, FALSE, INFINITE);*/
+#endif
         status = WaitForSingleObject(pSem->handle, -tmo.QuadPart / 10000);
     }
     else {

@@ -845,6 +845,7 @@ LIBCOM_API void epicsStdCall epicsThreadSleep ( double seconds )
         Sleep ( 0 );
     }
     else {
+#if 0
         timer = osdThreadGetTimer();
         if (!SetWaitableTimer(timer, &tmo, 0, NULL, NULL, 0)) {
             fprintf ( stderr, "epicsThreadSleep: SetWaitableTimer failed %lu\n", GetLastError() );
@@ -853,6 +854,7 @@ LIBCOM_API void epicsStdCall epicsThreadSleep ( double seconds )
         /*if (WaitForSingleObject(timer, INFINITE) != WAIT_OBJECT_0) {
             fprintf ( stderr, "epicsThreadSleep: WaitForSingleObject failed %lu\n", GetLastError() );
         }*/
+#endif
         Sleep ( -tmo.QuadPart / 10000 );
     }
 }
