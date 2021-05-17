@@ -511,7 +511,6 @@ static win32ThreadParam * epicsThreadParmCreate ( const char *pName )
         strcpy ( pParmWIN32->pName, pName );
         pParmWIN32->isSuspended = 0;
         epicsAtomicIncrIntT(&pParmWIN32->refcnt);
-#if 0
 #ifdef CREATE_WAITABLE_TIMER_HIGH_RESOLUTION
         pParmWIN32->timer = CreateWaitableTimerEx(NULL, NULL, CREATE_WAITABLE_TIMER_HIGH_RESOLUTION, TIMER_ALL_ACCESS);
 #endif
@@ -522,7 +521,6 @@ static win32ThreadParam * epicsThreadParmCreate ( const char *pName )
             free(pParmWIN32);
             return NULL;
         }
-#endif
     }
     return pParmWIN32;
 }
@@ -852,17 +850,14 @@ LIBCOM_API void epicsStdCall epicsThreadSleep ( double seconds )
         Sleep ( 0 );
     }
     else {
-#if 0
         timer = osdThreadGetTimer();
         if (!SetWaitableTimer(timer, &tmo, 0, NULL, NULL, 0)) {
             fprintf ( stderr, "epicsThreadSleep: SetWaitableTimer failed %lu\n", GetLastError() );
             return;
         }
-        /*if (WaitForSingleObject(timer, INFINITE) != WAIT_OBJECT_0) {
+        if (WaitForSingleObject(timer, INFINITE) != WAIT_OBJECT_0) {
             fprintf ( stderr, "epicsThreadSleep: WaitForSingleObject failed %lu\n", GetLastError() );
-        }*/
-#endif
-        Sleep ( -tmo.QuadPart / 10000 );
+        }
     }
 }
 
