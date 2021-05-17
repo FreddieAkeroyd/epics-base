@@ -93,6 +93,7 @@ LIBCOM_API epicsEventStatus epicsEventWaitWithTimeout (
     epicsEventId pSem, double timeOut )
 {
     static const unsigned nSec100PerSec = 10000000u;
+    static const unsigned mSecPerSec = 1000u;
     HANDLE handles[2];
     DWORD status;
     LARGE_INTEGER tmo;
@@ -101,6 +102,10 @@ LIBCOM_API epicsEventStatus epicsEventWaitWithTimeout (
 
     if ( timeOut <= 0.0 ) {
         tmo.QuadPart = 0u;
+    }
+    else if ( timeOut >= INFINITE / mSecPerSec  ) {
+        nSec100 = (LONGLONG)(INFINITE - 1) * (nSec100PerSec / mSecPerSec); /* for compatibility with old approach */
+        tmo.QuadPart = -nSec100;
     }
     else {
         nSec100 = (LONGLONG)(timeOut * nSec100PerSec + 0.999999);

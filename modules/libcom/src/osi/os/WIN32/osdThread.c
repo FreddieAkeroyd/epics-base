@@ -828,12 +828,17 @@ HANDLE osdThreadGetTimer()
 LIBCOM_API void epicsStdCall epicsThreadSleep ( double seconds )
 {
     static const unsigned nSec100PerSec = 10000000u;
+    static const unsigned mSecPerSec = 1000u;
     LARGE_INTEGER tmo;
     HANDLE timer;
     LONGLONG nSec100;
 
     if ( seconds <= 0.0 ) {
         tmo.QuadPart = 0u;
+    }
+    else if ( seconds >= INFINITE / mSecPerSec  ) {
+        nSec100 = (LONGLONG)(INFINITE - 1) * (nSec100PerSec / mSecPerSec); /* for compatibility with old approach */
+        tmo.QuadPart = -nSec100;
     }
     else {
         nSec100 = (LONGLONG)(seconds * nSec100PerSec + 0.999999);
