@@ -8,7 +8,7 @@ OPT_WHOLE_PROGRAM = YES
 
 WINLINK = link
 
-RCCMD = $(MSVC_PREFIX)rc$(MSVC_SUFFIX) -l 0x409 $(INCLUDES) -fo $@ $<
+RCCMD = $(MSVC_PREFIX)rc$(MSVC_SUFFIX) $(INCLUDES) -fo $@ $<
 
 ARCMD = $(MSVC_PREFIX)lib$(MSVC_SUFFIX) -nologo -verbose -out:$@ $(LIB_OPT_LDFLAGS) $(LIBRARY_LD_OBJS)
 
